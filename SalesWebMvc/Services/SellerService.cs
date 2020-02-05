@@ -35,11 +35,19 @@ namespace SalesWebMvc.Services
             //https://docs.microsoft.com/en-us/ef/core/querying/related-data
             return await _context.Seller.Include(obj => obj.Department).FirstOrDefaultAsync(obj => obj.Id == id);
         }
-        public async Task RemoveAsync (int id)
+        public async Task RemoveAsync(int id)
         {
-            var obj = await _context.Seller.FindAsync(id);
-            _context.Seller.Remove(obj);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var obj = await _context.Seller.FindAsync(id);
+                _context.Seller.Remove(obj);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e)
+            {
+                // ou pode ser incluido uma mensagem personalizado
+                throw new IntegrityException(e.Message);
+            }
         }
 
         public async Task UpdateAsync(Seller obj)
@@ -52,12 +60,12 @@ namespace SalesWebMvc.Services
             try
             {
                 _context.Update(obj);
-               await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException e)
             {
                 throw new DbConcurrencyException(e.Message);
-            } 
+            }
         }
     }
 }
